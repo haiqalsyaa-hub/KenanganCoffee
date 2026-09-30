@@ -1,0 +1,246 @@
+// ============================================================
+// LDCW6123 Group Project - Part 2
+// Program : Kenangan Coffee Order & Recommendation Assistant
+// Theme   : Tech-enabled grab-and-go coffee (Part 1: Christensen model)
+// Uses    : if/else, switch, loops, functions, input validation
+// NOTE    : Menu prices are SAMPLE values for demonstration only.
+//           Replace them with the real menu before submitting.
+// ============================================================
+#include <iostream>
+#include <iomanip>
+#include <limits>
+#include <string>
+#include <cstdio>
+#include <cstdlib>
+using namespace std;
+
+// ---------- Constants ----------
+const int    NUM_DRINKS      = 5;
+const double LARGE_SURCHARGE = 2.00;   // extra cost for Large size
+const double DELIVERY_FEE    = 4.00;   // flat delivery fee
+const double FREE_DELIVERY   = 40.00;  // free delivery above this subtotal
+const double PROMO_RATE      = 0.10;   // 10% off with a valid promo code
+const string PROMO_CODE      = "KENANGAN10";
+
+// ---------- Input helpers ----------
+// Reads an integer between lo and hi; repeats until the input is valid.
+int readInt(const string &prompt, int lo, int hi) {
+    int value;
+    while (true) {
+        cout << prompt;
+        if (cin >> value && value >= lo && value <= hi) {
+            return value;
+        }
+        if (cin.eof()) {            // input stream closed: stop instead of looping forever
+            cout << "\nInput ended. Exiting.\n";
+            exit(0);
+        }
+        cout << "  Invalid input. Please enter a number from "
+             << lo << " to " << hi << ".\n";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+}
+
+// Reads a positive decimal amount (used for the budget).
+double readBudget(const string &prompt) {
+    double value;
+    while (true) {
+        cout << prompt;
+        if (cin >> value && value > 0) {
+            return value;
+        }
+        if (cin.eof()) {
+            cout << "\nInput ended. Exiting.\n";
+            exit(0);
+        }
+        cout << "  Invalid input. Please enter an amount greater than 0.\n";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+}
+
+// ---------- Menu data (switch statements) ----------
+string drinkName(int id) {
+    switch (id) {
+        case 1: return "Kenangan Latte";
+        case 2: return "Avocado Coffee";
+        case 3: return "Iced Americano";
+        case 4: return "Milk Tea";
+        case 5: return "Chocolate Latte";
+        default: return "Unknown";
+    }
+}
+
+double drinkPrice(int id) {
+    switch (id) {
+        case 1: return 9.90;   // "from" price seen at the 2022 Malaysian launch
+        case 2: return 12.90;  // "from" price seen at the 2022 Malaysian launch
+        case 3: return 7.90;   // sample
+        case 4: return 8.90;   // sample
+        case 5: return 10.90;  // sample
+        default: return 0.0;
+    }
+}
+
+void showMenu() {
+    cout << "\n----------- MENU (RM) -----------\n";
+    cout << fixed << setprecision(2);
+    for (int i = 1; i <= NUM_DRINKS; i++) {
+        cout << " " << i << ". " << left << setw(16) << drinkName(i)
+             << right << setw(6) << drinkPrice(i) << "\n";
+    }
+    cout << "---------------------------------\n";
+}
+
+string sizeName(int s) {
+    return (s == 1) ? "Regular" : "Large";
+}
+
+string sweetName(int s) {
+    switch (s) {
+        case 1: return "Less sweet";
+        case 2: return "Normal";
+        case 3: return "Extra palm sugar";
+        default: return "Normal";
+    }
+}
+
+// ---------- Feature 1: Drink recommendation ----------
+void recommendDrink() {
+    cout << "\n=== Drink Recommendation ===\n";
+    cout << "What are you in the mood for?\n";
+    cout << " 1. Sweet and creamy\n";
+    cout << " 2. Strong and bold\n";
+    cout << " 3. Something different (non-coffee or fruity)\n";
+    int mood = readInt("Choose 1-3: ", 1, 3);
+    double budget = readBudget("Your budget for one drink (RM): ");
+
+    int pick = 0;   // 0 means nothing fits the budget
+    switch (mood) {
+        case 1:
+            if (budget >= drinkPrice(1))      pick = 1;  // Kenangan Latte
+            else if (budget >= drinkPrice(4)) pick = 4;  // Milk Tea
+            break;
+        case 2:
+            if (budget >= drinkPrice(3))      pick = 3;  // Iced Americano
+            break;
+        case 3:
+            if (budget >= drinkPrice(2))      pick = 2;  // Avocado Coffee
+            else if (budget >= drinkPrice(5)) pick = 5;  // Chocolate Latte
+            else if (budget >= drinkPrice(4)) pick = 4;  // Milk Tea
+            break;
+    }
+
+    if (pick == 0) {
+        cout << "Sorry, no drink on the menu fits RM " << fixed
+             << setprecision(2) << budget << ". Our cheapest drink is RM "
+             << drinkPrice(3) << ".\n";
+    } else {
+        cout << fixed << setprecision(2);
+        cout << "We recommend: " << drinkName(pick)
+             << " (RM " << drinkPrice(pick) << ")\n";
+    }
+}
+
+// ---------- Feature 2: Place an order ----------
+void placeOrder() {
+    cout << "\n=== Place an Order ===\n";
+    double subtotal = 0.0;
+    string receiptLines = "";
+    int itemCount = 0;
+    char again = 'y';
+
+    while (again == 'y' || again == 'Y') {
+        showMenu();
+        int drink = readInt("Choose a drink (1-5): ", 1, NUM_DRINKS);
+        int size  = readInt("Size: 1 = Regular, 2 = Large (+RM2.00): ", 1, 2);
+        int sweet = readInt("Sweetness: 1 = Less, 2 = Normal, 3 = Extra palm sugar: ", 1, 3);
+        int qty   = readInt("Quantity (1-10): ", 1, 10);
+
+        double unit = drinkPrice(drink);
+        if (size == 2) {
+            unit += LARGE_SURCHARGE;
+        }
+        double line = unit * qty;
+        subtotal += line;
+        itemCount += qty;
+
+        // Build one receipt line
+        string row = to_string(qty) + " x " + drinkName(drink) + " ("
+                   + sizeName(size) + ", " + sweetName(sweet) + ")";
+        char buf[32];
+        snprintf(buf, sizeof(buf), "RM %.2f", line);
+        receiptLines += "  " + row + "  " + buf + "\n";
+
+        cout << "Added: " << row << "\n";
+        cout << "Add another drink? (y/n): ";
+        cin >> again;
+    }
+
+    // Pickup or delivery
+    int service = readInt("\n1 = Pickup, 2 = Delivery: ", 1, 2);
+    double delivery = 0.0;
+    if (service == 2) {
+        if (subtotal >= FREE_DELIVERY) {
+            delivery = 0.0;
+            cout << "Free delivery applied (order above RM 40).\n";
+        } else {
+            delivery = DELIVERY_FEE;
+        }
+    }
+
+    // Promo code
+    double discount = 0.0;
+    cout << "Promo code (type NONE to skip): ";
+    string code;
+    cin >> code;
+    if (code == PROMO_CODE) {
+        discount = subtotal * PROMO_RATE;
+        cout << "Promo applied: 10% off the drinks.\n";
+    } else if (code != "NONE" && code != "none") {
+        cout << "Invalid promo code. No discount applied.\n";
+    }
+
+    double total = subtotal - discount + delivery;
+
+    // Order summary
+    cout << fixed << setprecision(2);
+    cout << "\n=========== ORDER SUMMARY ===========\n";
+    cout << receiptLines;
+    cout << "-------------------------------------\n";
+    cout << "  Items          : " << itemCount << "\n";
+    cout << "  Subtotal       : RM " << subtotal << "\n";
+    cout << "  Discount       : -RM " << discount << "\n";
+    cout << "  Delivery fee   : RM " << delivery << "\n";
+    cout << "  TOTAL          : RM " << total << "\n";
+    cout << "  Service        : " << (service == 1 ? "Pickup" : "Delivery") << "\n";
+    cout << "=====================================\n";
+    cout << "Order confirmed. Thank you for choosing Kenangan Coffee!\n";
+}
+
+// ---------- Main menu ----------
+int main() {
+    cout << "*****************************************\n";
+    cout << "  Welcome to the Kenangan Coffee Assistant\n";
+    cout << "*****************************************\n";
+
+    bool running = true;
+    while (running) {
+        cout << "\nMAIN MENU\n";
+        cout << " 1. Get a drink recommendation\n";
+        cout << " 2. Place an order\n";
+        cout << " 3. Exit\n";
+        int choice = readInt("Choose 1-3: ", 1, 3);
+
+        switch (choice) {
+            case 1: recommendDrink(); break;
+            case 2: placeOrder();     break;
+            case 3:
+                cout << "Goodbye! Enjoy your coffee.\n";
+                running = false;
+                break;
+        }
+    }
+    return 0;
+}
