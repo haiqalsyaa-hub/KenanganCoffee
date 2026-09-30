@@ -1,11 +1,3 @@
-// ============================================================
-// LDCW6123 Group Project - Part 2
-// Program : Kenangan Coffee Order & Recommendation Assistant
-// Theme   : Tech-enabled grab-and-go coffee (Part 1: Christensen model)
-// Uses    : if/else, switch, loops, functions, input validation
-// NOTE    : Menu prices are SAMPLE values for demonstration only.
-//           Replace them with the real menu before submitting.
-// ============================================================
 #include <iostream>
 #include <iomanip>
 #include <limits>
@@ -14,16 +6,15 @@
 #include <cstdlib>
 using namespace std;
 
-// ---------- Constants ----------
+//Extra Charge and Promo Code
 const int    NUM_DRINKS      = 5;
 const double LARGE_SURCHARGE = 2.00;   // extra cost for Large size
 const double DELIVERY_FEE    = 4.00;   // flat delivery fee
 const double FREE_DELIVERY   = 40.00;  // free delivery above this subtotal
 const double PROMO_RATE      = 0.10;   // 10% off with a valid promo code
-const string PROMO_CODE      = "KENANGAN10";
+const string PROMO_CODE      = "KENANGANFCI";
 
-// ---------- Input helpers ----------
-// Reads an integer between lo and hi; repeats until the input is valid.
+
 int readInt(const string &prompt, int lo, int hi) {
     int value;
     while (true) {
@@ -60,7 +51,7 @@ double readBudget(const string &prompt) {
     }
 }
 
-// ---------- Menu data (switch statements) ----------
+// Menu
 string drinkName(int id) {
     switch (id) {
         case 1: return "Kenangan Latte";
@@ -143,7 +134,7 @@ void recommendDrink() {
     }
 }
 
-// ---------- Feature 2: Place an order ----------
+// Ordering
 void placeOrder() {
     cout << "\n=== Place an Order ===\n";
     double subtotal = 0.0;
@@ -219,7 +210,7 @@ void placeOrder() {
     cout << "Order confirmed. Thank you for choosing Kenangan Coffee!\n";
 }
 
-// ---------- Main menu ----------
+// Menu
 int main() {
     cout << "*****************************************\n";
     cout << "  Welcome to the Kenangan Coffee Assistant\n";
